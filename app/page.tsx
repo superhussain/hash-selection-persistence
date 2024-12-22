@@ -1,3 +1,5 @@
+'use client';
+
 import ItemSelector from '@/components/ItemSelector';
 
 export default function Home() {

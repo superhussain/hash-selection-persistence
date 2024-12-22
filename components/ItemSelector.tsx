@@ -1,37 +1,30 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { generateHash } from '@/lib/hash';
-import { storeSelectionHash, getStoredSelection } from '@/lib/client';
 
 export default function ItemSelector() {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // Generate array of 1000 items
   const items = Array.from({ length: 1000 }, (_, i) => i + 1);
 
-  useEffect(() => {
-    const hash = searchParams.get('hash');
-    if (hash) {
-      loadSelectionFromHash(hash);
-    }
-  }, [searchParams]);
+  const currentHash = useMemo(() => searchParams.get('hash'), [searchParams]);
 
-  function loadSelectionFromHash(hash: string) {
+  useEffect(() => {
+    if (currentHash) loadSelectionFromHash(currentHash);
+  }, [currentHash]);
+
+  async function loadSelectionFromHash(hash: string) {
     try {
       setLoading(true);
-      const items = getStoredSelection(hash);
-      if (items) {
-        setSelectedItems(items);
-      }
+      const response = await fetch(`/api/hash?hash=${hash}`);
+      const data = await response.json();
+      if (data.items) setSelectedItems(data.items);
     } catch (error) {
       console.error('Error loading selection:', error);
     } finally {
@@ -39,17 +32,20 @@ export default function ItemSelector() {
     }
   }
 
-  function handleSelectionChange(item: number, checked: boolean) {
+  async function handleSelectionChange(item: number, checked: boolean) {
     const newSelection = checked
       ? [...selectedItems, item]
       : selectedItems.filter((i) => i !== item);
-    
+
     setSelectedItems(newSelection);
-    
+
     try {
-      const hash = generateHash(newSelection);
-      storeSelectionHash(hash, newSelection);
-      
+      const response = await fetch('/api/hash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', },
+        body: JSON.stringify({ items: newSelection }),
+      });
+      const { hash } = await response.json() as { hash: string };
       const url = new URL(window.location.href);
       url.searchParams.set('hash', hash);
       router.replace(url.pathname + url.search);
@@ -68,12 +64,16 @@ export default function ItemSelector() {
       </div>
       <ScrollArea className="h-[400px] rounded-md border p-4">
         <div className="grid grid-cols-4 gap-4">
-          {items.map((item) => (
+          {loading && selectedItems.length === 0 ? (
+            <div className="col-span-4 text-center text-muted-foreground">
+              Loading...
+            </div>
+          ) : items.map((item) => (
             <div key={item} className="flex items-center space-x-2">
               <Checkbox
                 id={`item-${item}`}
                 checked={selectedItems.includes(item)}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   handleSelectionChange(item, checked as boolean)
                 }
                 disabled={loading}

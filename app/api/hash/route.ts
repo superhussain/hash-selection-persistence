@@ -5,7 +5,7 @@ import type { HashRequest } from '@/lib/types';
 export async function POST(request: Request) {
   try {
     const body: HashRequest = await request.json();
-    
+
     if (!body.items || !Array.isArray(body.items)) {
       return NextResponse.json(
         { error: 'Invalid items array' },
@@ -14,8 +14,8 @@ export async function POST(request: Request) {
     }
 
     const hash = generateHash(body.items);
-    storeHash(hash, body.items);
-    
+    await storeHash(hash, body.items);
+
     return NextResponse.json({ hash });
   } catch (error) {
     console.error('POST Error:', error);
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const items = getStoredItems(hash);
+    const items = await getStoredItems(hash);
     if (!items) {
       return NextResponse.json(
         { error: 'Hash not found' },

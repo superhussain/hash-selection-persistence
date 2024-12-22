@@ -1,29 +1,29 @@
 import { createHash } from 'crypto';
+import { Redis } from '@upstash/redis';
 
-// In-memory store for demo purposes
-const hashStore: Map<string, number[]> = new Map();
+const redis = Redis.fromEnv();
+const TTL_SECONDS = 7 * 24 * 60 * 60; // 1 week
 
 export function generateHash(items: number[]): string {
   if (!items || !Array.isArray(items)) {
     throw new Error('Invalid items array');
   }
-  
+
   const sortedItems = [...items].sort((a, b) => a - b);
   const str = sortedItems.join(',');
   return createHash('sha256').update(str).digest('hex').slice(0, 8);
 }
 
-export function storeHash(hash: string, items: number[]): void {
+export async function storeHash(hash: string, items: number[]): Promise<void> {
   if (!hash || !items || !Array.isArray(items)) {
     throw new Error('Invalid hash or items');
   }
-  hashStore.set(hash, [...items]); // Store a copy of the array
+  await redis.set(hash, items, { ex: TTL_SECONDS });
 }
 
-export function getStoredItems(hash: string): number[] | null {
-  if (!hash) {
-    return null;
-  }
-  const items = hashStore.get(hash);
-  return items ? [...items] : null; // Return a copy of the array
+export async function getStoredItems(hash: string): Promise<number[] | null> {
+  if (!hash) return null;
+  const items = await redis.get<number[]>(hash);
+  if (items) await redis.expire(hash, TTL_SECONDS); // reset TTL
+  return items;
 }
