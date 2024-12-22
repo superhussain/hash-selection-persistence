@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,6 +19,7 @@ export default function ItemSelector() {
 
   useEffect(() => {
     if (currentHash) loadSelectionFromHash(currentHash);
+    else setLoading(false);
   }, [currentHash]);
 
   async function loadSelectionFromHash(hash: string) {
