@@ -1,4 +1,7 @@
+"use client";
+
 import ItemSelector from '@/components/ItemSelector';
+import CampaignSelect from '@/components/CampaignSelect';
 
 export default function Home() {
   return (
@@ -8,6 +11,7 @@ export default function Home() {
       </h1>
       <div className="max-w-4xl mx-auto">
         <ItemSelector />
+        <CampaignSelect />
       </div>
     </main>
   );

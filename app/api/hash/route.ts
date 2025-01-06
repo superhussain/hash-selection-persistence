@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
-import { generateHash, storeHash, getStoredItems } from '@/lib/hash';
-import type { HashRequest } from '@/lib/types';
+import { generateHash, storeHash, getStoredState } from '@/lib/hash';
 
 export async function POST(request: Request) {
   try {
-    const body: HashRequest = await request.json();
+    const body: unknown = await request.json();
+    console.log('⚠️ | POST | body:', body);
 
-    if (!body.items || !Array.isArray(body.items)) {
+    // TODO: validate body
+    if (!body || typeof body !== 'object') {
       return NextResponse.json(
-        { error: 'Invalid items array' },
+        { error: 'Invalid state' },
         { status: 400 }
       );
     }
 
-    const hash = generateHash(body.items);
-    await storeHash(hash, body.items);
+    const hash = generateHash(body);
+    await storeHash(hash, body);
 
     return NextResponse.json({ hash });
   } catch (error) {
@@ -38,15 +39,15 @@ export async function GET(request: Request) {
       );
     }
 
-    const items = await getStoredItems(hash);
-    if (!items) {
+    const state = await getStoredState(hash);
+    if (!state) {
       return NextResponse.json(
         { error: 'Hash not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ items });
+    return NextResponse.json(state);
   } catch (error) {
     console.error('GET Error:', error);
     return NextResponse.json(
