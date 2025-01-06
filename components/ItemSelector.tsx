@@ -9,7 +9,10 @@ import useHashUrlState from "@/hooks/useHashUrlState";
 
 export default function ItemSelector() {
   const { state, setState, hash, loading, saving } = useHashUrlState();
-  const isLoading = useMemo(() => loading || saving, [loading, saving]);
+  const isLoading = useMemo(() => {
+    if (hash && !state) return true; // initial loading state from hash
+    return loading || saving
+  }, [hash, loading, saving, state]);
   const selectedItems = useMemo(() => state?.items as number[] || [], [state]);
   const setSelectedItems = (items: number[]) => setState({ items });
 
