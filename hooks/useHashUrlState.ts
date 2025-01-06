@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 /**
  * A hook to manage UI state in the URL represented by a hashed query parameter
  * @param param The query parameter name to use for the hash
- * @param initial The initial value of the state
  *
  * @example
  * const { state: filter, setState: setFilter } = useHashUrlState('filter');
@@ -16,16 +15,16 @@ export default function useHashUrlState<T = unknown>(param = 'hash', initial?: T
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [state, setState] = useState<T | undefined>(initial);
+  const [state, setState] = useState<T>(initial as T);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const hash = useMemo(() => searchParams.get(param), [param, searchParams]);
 
-  const loadHashState = useCallback(async (hash: string) => {
+  const loadHashState = useCallback(async (hashParam: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/hash?hash=${hash}`);
+      const response = await fetch(`/api/hash?hash=${hashParam}`);
       const data = (await response.json()) as T;
       if (data) setState(data);
     } catch (error) {
@@ -38,6 +37,17 @@ export default function useHashUrlState<T = unknown>(param = 'hash', initial?: T
   const handleStateChange = useCallback(async () => {
     try {
       setSaving(true);
+
+      // handle empty state
+      const isEmptyObject = state && typeof state === 'object' && Object.keys(state).length === 0;
+      const isEmptyArray = Array.isArray(state) && state.length === 0;
+      if (!state || isEmptyObject || isEmptyArray) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete(param);
+        router.replace(url.pathname + url.search);
+        return;
+      }
+
       const response = await fetch("/api/hash", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
