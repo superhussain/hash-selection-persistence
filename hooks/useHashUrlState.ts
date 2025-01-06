@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 /**
  * A hook to manage UI state in the URL represented by a hashed query parameter
  * @param param The query parameter name to use for the hash
+ * @param initial The initial value of the state
  *
  * @example
  * const { state: filter, setState: setFilter } = useHashUrlState('filter');
@@ -11,11 +12,11 @@ import { useRouter, useSearchParams } from "next/navigation";
  * setFilter({ campaignIds: [1, 2, 3], types: ['display', 'native'], statuses: ['live'] });
  * // this will update the `filter` URL query parameter with a hash that represents the state
  */
-export default function useHashUrlState(param = 'hash') {
+export default function useHashUrlState<T = unknown>(param = 'hash', initial?: T) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [state, setState] = useState<Record<string, unknown>>();
+  const [state, setState] = useState<T | undefined>(initial);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -25,7 +26,7 @@ export default function useHashUrlState(param = 'hash') {
     try {
       setLoading(true);
       const response = await fetch(`/api/hash?hash=${hash}`);
-      const data = (await response.json()) as Record<string, unknown>;
+      const data = (await response.json()) as T;
       if (data) setState(data);
     } catch (error) {
       console.error("Error loading hash:", error);

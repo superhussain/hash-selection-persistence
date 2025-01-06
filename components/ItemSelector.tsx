@@ -6,25 +6,26 @@ import Spinner from "./Spinner";
 import useHashUrlState from "@/hooks/useHashUrlState";
 
 export default function ItemSelector() {
-  const { state, setState, hash, loading, saving } = useHashUrlState();
+  const { state, setState, hash, loading, saving } = useHashUrlState<{
+    items: number[];
+  }>();
+
   const isLoading = useMemo(() => {
     if (hash && !state) return true; // initial loading state from hash
-    return loading || saving
+    return loading || saving;
   }, [hash, loading, saving, state]);
-  const selectedItems = useMemo(() => state?.items as number[] || [], [state]);
-  const setSelectedItems = (items: number[]) => setState({ items });
 
-  // Generate array of 1000 items
-  const items = Array.from({ length: 1000 }, (_, i) => i + 1);
-
+  const selectedItems = useMemo(() => state?.items || [], [state]);
 
   function handleSelectionChange(item: number, checked: boolean) {
     const newSelection = checked
-      ? [...selectedItems, item]
-      : selectedItems.filter((i) => i !== item);
-
-    setSelectedItems(newSelection);
+    ? [...selectedItems, item]
+    : selectedItems.filter((i) => i !== item);
+    setState({ items: newSelection });
   }
+
+  // Generate array of 1000 items
+  const items = Array.from({ length: 1000 }, (_, i) => i + 1);
 
   return (
     <Card className="p-6">
@@ -36,7 +37,11 @@ export default function ItemSelector() {
         {hash && (
           <div className="text-xs text-muted-foreground flex items-center gap-2">
             hash: {hash}
-            <Spinner className={`w-4 h-4 transition-opacity pointer-events-none ${!isLoading ? `opacity-0` : ''}`} />
+            <Spinner
+              className={`w-4 h-4 transition-opacity pointer-events-none ${
+                !isLoading ? `opacity-0` : ""
+              }`}
+            />
           </div>
         )}
       </div>
