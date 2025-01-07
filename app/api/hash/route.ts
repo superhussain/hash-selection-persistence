@@ -4,7 +4,6 @@ import { generateHash, storeHash, getStoredState } from '@/lib/hash';
 export async function POST(request: Request) {
   try {
     const body: unknown = await request.json();
-    console.log('⚠️ | POST | body:', body);
 
     // TODO: validate body
     if (!body || typeof body !== 'object') {
