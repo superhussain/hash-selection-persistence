@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { constructUrl } from "@/lib/utils";
+
 /**
  * A hook to manage UI state in the URL represented by a hashed query parameter
  * @param param The query parameter name to use for the hash
@@ -42,9 +44,7 @@ export default function useHashUrlState<T = unknown>(param = 'hash', initial?: T
       const isEmptyObject = state && typeof state === 'object' && Object.keys(state).length === 0;
       const isEmptyArray = Array.isArray(state) && state.length === 0;
       if (!state || isEmptyObject || isEmptyArray) {
-        const url = new URL(window.location.href);
-        url.searchParams.delete(param);
-        router.replace(url.pathname + url.search);
+        router.replace(constructUrl({ query: { [param]: '' } }));
         return;
       }
 
@@ -54,9 +54,7 @@ export default function useHashUrlState<T = unknown>(param = 'hash', initial?: T
         body: JSON.stringify(state),
       });
       const res = (await response.json()) as { hash: string };
-      const url = new URL(window.location.href);
-      url.searchParams.set(param, res.hash);
-      router.replace(url.pathname + url.search);
+      router.replace(constructUrl({ query: { [param]: res.hash } }));
     } catch (error) {
       console.error("Error saving hash:", error);
     } finally {

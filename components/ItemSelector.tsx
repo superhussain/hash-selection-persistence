@@ -30,6 +30,7 @@ export default function ItemSelector() {
   return (
     <Card className="p-6">
       <h2 className="text-2xl font-bold mb-4">Select Items</h2>
+      <p className="text-sm text-muted-foreground mb-4">This example uses the <code className="text-blue-600 font-bold">useHashUrlState</code> hook with the default options: <code className="text-blue-600 font-bold">hash</code></p>
       <div className="mb-4">
         <p className="text-sm text-muted-foreground mb-2">
           Selected {selectedItems.length} of {items.length} items
